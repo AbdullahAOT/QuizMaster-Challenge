@@ -2,15 +2,16 @@
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
+
 namespace QuizMaster
 {
     internal class Program
     {
-        static void Main(string[] args)
+        static async Task Main(string[] args)
         {
             try
             {
-                startQuiz();
+                await StartQuiz();
             }
             catch (Exception ex)
             {
@@ -21,7 +22,8 @@ namespace QuizMaster
                 Console.WriteLine("Quiz was taken successfully");
             }
         }
-        private static void startQuiz()
+
+        private static async Task StartQuiz()
         {
             string question1 = "Question 1: In which country is Eiffel tower?";
             string question2 = "Question 2: What is the country known for making pizza?";
@@ -37,6 +39,7 @@ namespace QuizMaster
             string[] arrayOfAnswers = new string[] { answer1, answer2, answer3, answer4, answer5 };
             int userMark = 0;
             string start = "";
+
             Console.WriteLine("Welcome to countries quiz, you have 10 seconds to answer each question, type start then press Enter to start !");
             start = Console.ReadLine();
             while (start != "start")
@@ -45,34 +48,30 @@ namespace QuizMaster
                 Console.WriteLine("Welcome to countries quiz, you have 10 seconds to answer each question, type start then press Enter to start !");
                 start = Console.ReadLine();
             }
+
             for (int i = 0; i < arrayOfQuestions.Length; i++)
             {
                 Console.WriteLine(arrayOfQuestions[i]);
-                string userAnswer = "";
-                CancellationTokenSource cts = new CancellationTokenSource();
-                Task.Run(async () =>
+                string userAnswer = await GetAnswerWithTimeout(10000);
+
+                if (userAnswer == null)
                 {
-                    await Task.Delay(10000, cts.Token);
-                    if (string.IsNullOrEmpty(userAnswer))
-                    {
-                        Console.WriteLine("Time's up, press enter to move to next question");
-                        cts.Cancel();
-                    }
-                });
-                userAnswer = Console.ReadLine();
-                while (Regex.IsMatch(userAnswer, @"[^a-zA-Z]"))
-                {
-                    Console.WriteLine("Please enter a valid answer, do not use anything other than letters");
-                    userAnswer = Console.ReadLine();
-                }
-                cts.Cancel();
-                if (string.IsNullOrEmpty(userAnswer))
-                {
-                    Console.WriteLine("No answer provided. Moving to the next question.");
+                    Console.WriteLine("Time's up, no answer provided. Moving to the next question.");
                     continue;
                 }
 
-                if (userAnswer.ToLower() == arrayOfAnswers[i].ToLower())
+                while (Regex.IsMatch(userAnswer, @"[^a-zA-Z]"))
+                {
+                    Console.WriteLine("Please enter a valid answer, do not use anything other than letters");
+                    userAnswer = await GetAnswerWithTimeout(10000);
+                    if (userAnswer == null)
+                    {
+                        Console.WriteLine("Time's up, no valid answer provided. Moving to the next question.");
+                        break;
+                    }
+                }
+
+                if (userAnswer != null && userAnswer.ToLower() == arrayOfAnswers[i].ToLower())
                 {
                     userMark += 2;
                     Console.WriteLine("Your answer is correct :)");
@@ -82,6 +81,7 @@ namespace QuizMaster
                     Console.WriteLine("Your answer is wrong :(");
                 }
             }
+
             switch (userMark)
             {
                 case 10:
@@ -102,6 +102,19 @@ namespace QuizMaster
                 default:
                     Console.WriteLine($"Your final mark is {userMark}, Bruh, do you even know what country you live in?");
                     break;
+            }
+        }
+
+        private static async Task<string> GetAnswerWithTimeout(int timeout)
+        {
+            Task<string> getInputTask = Task.Run(() => Console.ReadLine());
+            if (await Task.WhenAny(getInputTask, Task.Delay(timeout)) == getInputTask)
+            {
+                return await getInputTask;
+            }
+            else
+            {
+                return null;
             }
         }
     }
