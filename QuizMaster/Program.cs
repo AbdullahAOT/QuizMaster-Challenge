@@ -1,5 +1,7 @@
-﻿using System.Text.RegularExpressions;
-
+﻿using System;
+using System.Text.RegularExpressions;
+using System.Threading;
+using System.Threading.Tasks;
 namespace QuizMaster
 {
     internal class Program
@@ -10,7 +12,7 @@ namespace QuizMaster
             {
                 startQuiz();
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 Console.WriteLine(ex.Message);
             }
@@ -24,7 +26,7 @@ namespace QuizMaster
             string question1 = "Question 1: In which country is Eiffel tower?";
             string question2 = "Question 2: What is the country known for making pizza?";
             string question3 = "Question 3: Which country won the last world cup in Qatar in 2022?";
-            string question4 = "Question 4: What is the country that London is it's capital?";
+            string question4 = "Question 4: What is the country that London is its capital?";
             string question5 = "Question 5: What is the country that doesn't exist?";
             string[] arrayOfQuestions = new string[] { question1, question2, question3, question4, question5 };
             string answer1 = "France";
@@ -35,25 +37,42 @@ namespace QuizMaster
             string[] arrayOfAnswers = new string[] { answer1, answer2, answer3, answer4, answer5 };
             int userMark = 0;
             string start = "";
-            Console.WriteLine("Welcome to countries quiz, type start then press Enter to start !");
+            Console.WriteLine("Welcome to countries quiz, you have 10 seconds to answer each question, type start then press Enter to start !");
             start = Console.ReadLine();
             while (start != "start")
             {
                 Console.Clear();
-                Console.WriteLine("Welcome to countries quiz, type start then press Enter to start !");
+                Console.WriteLine("Welcome to countries quiz, you have 10 seconds to answer each question, type start then press Enter to start !");
                 start = Console.ReadLine();
             }
             for (int i = 0; i < arrayOfQuestions.Length; i++)
             {
                 Console.WriteLine(arrayOfQuestions[i]);
                 string userAnswer = "";
-                userAnswer=Console.ReadLine();
-                while ((Regex.IsMatch(userAnswer, @"[^a-zA-Z]")) || userAnswer == "")
+                CancellationTokenSource cts = new CancellationTokenSource();
+                Task.Run(async () =>
+                {
+                    await Task.Delay(10000, cts.Token);
+                    if (string.IsNullOrEmpty(userAnswer))
+                    {
+                        Console.WriteLine("Time's up, press enter to move to next question");
+                        cts.Cancel();
+                    }
+                });
+                userAnswer = Console.ReadLine();
+                while (Regex.IsMatch(userAnswer, @"[^a-zA-Z]"))
                 {
                     Console.WriteLine("Please enter a valid answer, do not use anything other than letters");
                     userAnswer = Console.ReadLine();
                 }
-                if(userAnswer.ToLower() == arrayOfAnswers[i].ToLower())
+                cts.Cancel();
+                if (string.IsNullOrEmpty(userAnswer))
+                {
+                    Console.WriteLine("No answer provided. Moving to the next question.");
+                    continue;
+                }
+
+                if (userAnswer.ToLower() == arrayOfAnswers[i].ToLower())
                 {
                     userMark += 2;
                     Console.WriteLine("Your answer is correct :)");
@@ -66,7 +85,7 @@ namespace QuizMaster
             switch (userMark)
             {
                 case 10:
-                        Console.WriteLine($"Your final mark is {userMark}, Your countries knowledge is GREAT !");
+                    Console.WriteLine($"Your final mark is {userMark}, Your countries knowledge is GREAT !");
                     break;
                 case 8:
                     Console.WriteLine($"Your final mark is {userMark}, Your countries knowledge is very good !");
@@ -81,7 +100,7 @@ namespace QuizMaster
                     Console.WriteLine($"Your final mark is {userMark}, Your countries knowledge is similar to my knowledge in kitchen XD");
                     break;
                 default:
-                    Console.WriteLine($"Your final mark is {userMark}, Bruh, do you know even what country you live in?");
+                    Console.WriteLine($"Your final mark is {userMark}, Bruh, do you even know what country you live in?");
                     break;
             }
         }
