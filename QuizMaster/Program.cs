@@ -67,10 +67,6 @@ namespace QuizMaster
                 {
                     Console.WriteLine($"Your answer is wrong, the right answer is {arrayOfAnswers[i]}");
                 }
-                if(userAnswer != arrayOfAnswers[i] || userAnswer == null)
-                {
-                    Console.WriteLine("Time is up, moving to next question");
-                }
             }
             Console.WriteLine($"Your final mark is {userMark}");
         }
