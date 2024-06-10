@@ -1,12 +1,14 @@
-﻿namespace QuizMaster
+﻿using System.Security.Cryptography.X509Certificates;
+
+namespace QuizMaster
 {
     internal class Program
     {
-        static void Main(string[] args)
+        static async Task Main(string[] args)
         {
             try
             {
-                startQuiz();
+                await startQuiz();
             }
             catch (Exception ex)
             {
@@ -17,7 +19,7 @@
                 Console.WriteLine("Quiz was taken successfully");
             }
         }
-        private static void startQuiz()
+        public static async Task startQuiz()
         {
             string question1 = "Question 1: In which year did Jordan become independant?";
             string question2 = "Question 2: In which year did king Abdullah || become the king of Jordan?";
@@ -32,9 +34,7 @@
             int answer5 = 1962;
             int[] arrayOfAnswers = new int[] { answer1, answer2, answer3, answer4, answer5 };
             int userMark = 0;
-            string start = null;
-            Console.WriteLine("Welcome to Jordan history quiz, type start then press Enter to start !");
-            start = Console.ReadLine().ToLower();
+            string? start = null;
             while (start != "start")
             {
                 Console.Clear();
@@ -67,6 +67,10 @@
                 else
                 {
                     Console.WriteLine($"Your answer is wrong, the right answer is {arrayOfAnswers[i]}");
+                }
+                if(userAnswer != arrayOfAnswers[i] || userAnswer == null)
+                {
+                    Console.WriteLine("Time is up, moving to next question");
                 }
             }
             Console.WriteLine($"Your final mark is {userMark}");
